@@ -12,9 +12,9 @@ Simple API for streaming platform, using rtmp
 
 ## ToDo
 
-[X] User registry
-[X] User auth
-[X] RTMP Setup
-[ ] Enable stream save
-[ ] Followers system
-[ ] Responsive design
+-   [x] User registry
+-   [x] User auth
+-   [x] RTMP Setup
+-   [ ] Enable stream save
+-   [ ] Followers system
+-   [ ] Responsive design

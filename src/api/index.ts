@@ -27,13 +27,6 @@ export function InitApi(port: number) {
 		next();
 	});
 
-	app.get("/view", (req, res, next) => {
-		res.sendFile(path.join(config.files.public, "view.html"));
-	});
-	app.get("/streaming", (req, res, next) => {
-		res.sendFile(path.join(config.files.public, "stream.html"));
-	});
-
 	// Routes here
 	app.use("/user", usersRouter);
 	app.use("/auth", authRouter);
