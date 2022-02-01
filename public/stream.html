@@ -1,0 +1,101 @@
+!DOCTYPE html>
+    <head>
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <script src="https://cdn.socket.io/4.4.1/socket.io.min.js" integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.25.0/axios.min.js" integrity="sha512-/Q6t3CASm04EliI1QyIDAA/nDo9R8FQ/BULoUFyN4n/BDdyIxeH7u++Z+eobdmr11gG5D/6nPFyDlnisDwhpYA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    </head>
+
+    <body>
+        <video src="" id="video" style="width:100%; height: 100%;" autoplay="true" controls="true"></video>
+            </br>
+        <canvas style="display:none;" id="preview"></canvas>
+        <div id="log"></div>
+
+        <script type="text/javascript">
+            var canvas = document.getElementById("preview");
+            var context = canvas.getContext('2d');
+        
+            canvas.width = 900;
+            canvas.height = 700;
+        
+            context.width = canvas.width;
+            context.height = canvas.height;
+        
+            var video = document.getElementById("video");
+        
+            var socket = io('ws://192.168.0.110:8080');
+            var myStream = null;
+        
+            function logger(msg){
+                document.getElementById("log").innerText += "\n" + msg;
+            }
+        
+            function loadCamera(stream){
+                var mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.onstart = function(e) {
+                    this.chunks = [];
+                };
+                mediaRecorder.ondataavailable = function(e) {
+                    this.chunks.push(e.data);
+                };
+                mediaRecorder.onstop = function(e) {
+                    var blob = new Blob(this.chunks, { 'type' : 'video/webm; codecs=h264' });
+                    console.log("send");
+                    socket.emit('stream', blob);
+                };
+                
+              try {
+                  video.srcObject = stream;
+                  logger(stream);
+              } 
+              
+              catch (error) {
+               video.src = URL.createObjectURL(stream);
+               logger(video.src);
+              }
+               logger("Camera connected");
+               mediaRecorder.start();
+
+                // Stop recording after 5 seconds and broadcast it to server
+                setInterval(function() {
+                    mediaRecorder.stop();
+               mediaRecorder.start();
+
+                }, 5000);
+               
+            }
+        
+            function loadFail(){
+                logger("Camera not connected");
+            }
+        
+
+            window.addEventListener("load", (e) => {
+
+                axios.post("http://localhost:8080/stream",{title:"new stream"}).then(response => {
+                    const id = response.data.body.id;
+                    logger(`stream id: ${id}`);
+                    socket.emit('subscribeStream',{streamID:id});
+                    navigator.getUserMedia = ( navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msgGetUserMedia );
+            
+                    if(navigator.getUserMedia)
+                    {
+                        navigator.getUserMedia({
+                            video: true, 
+                            audio: true
+                        },loadCamera,loadFail);
+                    }
+
+                });
+
+
+                
+            })
+        </script>
+
+    </body>
+</html>
